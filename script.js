@@ -7,6 +7,35 @@
   Das garantiert identische Ergebnisse zur ChatGPT-Webseite!
 */
 
+
+// --- Auto-Download der generierten Bilder ---
+async function autoDownloadImage(imageUrl, prompt) {
+  try {
+    const ts = new Date();
+    const pad = (n)=> String(n).padStart(2, '0');
+    const safePrompt = (prompt || 'image')
+      .replace(/[^a-z0-9\-_. ]/gi, ' ')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 6)
+      .join('_');
+    const filename = `generated_${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}_${safePrompt || 'image'}.png`;
+    const res = await fetch(imageUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error('AutoDownload failed:', e);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Referenzen auf Modal und dessen Eingabefelder für den API‑Schlüssel
   const modal = document.getElementById('apiKeyModal');
@@ -193,7 +222,13 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
     promptPara.textContent = originalPrompt;
     messageDiv.appendChild(promptPara);
     
-    // Füge die Nachricht in die Liste ein (ohne Statusanzeige)
+    // Loading-Indikator hinzufügen
+    const loadingDiv = document.createElement('div');
+    loadingDiv.textContent = '🔄 Optimiere Prompt mit GPT-4...';
+    loadingDiv.style.fontStyle = 'italic';
+    loadingDiv.style.color = '#666';
+    messageDiv.appendChild(loadingDiv);
+    
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     promptInput.value = '';
@@ -203,10 +238,15 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
 
     try {
       // STUFE 1: GPT-4 optimiert den Prompt (wie ChatGPT)
+      loadingDiv.textContent = '🔄 GPT-4 optimiert Prompt...';
       const optimizedPrompt = await optimizePromptWithGPT4(originalPrompt);
       
       // STUFE 2: DALL-E 3 generiert das Bild
+      loadingDiv.textContent = '🎨 DALL-E 3 generiert Bild...';
       const imageData = await generateImageWithOptimizedPrompt(optimizedPrompt, originalPrompt);
+      
+      // Loading-Indikator entfernen
+      messageDiv.removeChild(loadingDiv);
       
       const imageUrl = imageData.data && imageData.data[0] && imageData.data[0].url;
       
@@ -220,7 +260,15 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
         });
         messageDiv.appendChild(img);
         
-        // Zeige das generierte Bild sofort groß
+        // Zeige auch den optimierten Prompt (optional)
+        const optimizedDiv = document.createElement('div');
+        optimizedDiv.innerHTML = `<small><strong>Optimierter Prompt:</strong> ${optimizedPrompt}</small>`;
+        optimizedDiv.style.fontSize = '0.8em';
+        optimizedDiv.style.color = '#666';
+        optimizedDiv.style.marginTop = '0.5rem';
+        messageDiv.appendChild(optimizedDiv);
+        
+        // automatisch groß anzeigen
         showResult(img.cloneNode(true));
       } else {
         const errorP = document.createElement('p');
@@ -229,6 +277,11 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
       }
     } catch (error) {
       console.error('Generation error:', error);
+      
+      // Loading-Indikator entfernen
+      if (messageDiv.contains(loadingDiv)) {
+        messageDiv.removeChild(loadingDiv);
+      }
       
       const errorP = document.createElement('p');
       if (error.message && error.message.toLowerCase().includes('failed to fetch')) {
