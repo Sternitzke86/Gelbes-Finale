@@ -36,29 +36,6 @@ async function autoDownloadImage(imageUrl, prompt) {
   }
 }
 
-
-// --- Portrait-aware prompt enhancement (focused on realistic human faces) ---
-function buildEnhancedPrompt(userText) {
-  const text = (userText || "").trim();
-  const faceRegex = /(portrait|headshot|face|person|people|woman|man|girl|boy|actor|actress|close[- ]?up)/i;
-  if (!faceRegex.test(text)) {
-    // default: keep your current mild enhancement
-    const systemStyle = "Generate a highly detailed, photorealistic image with balanced lighting, realistic textures, coherent composition, and natural colors. Avoid exaggeration unless explicitly requested. ";
-    return systemStyle + text;
-  }
-  // Portrait preset aimed at better faces (landscape framing kept)
-  const preset = [
-    "Portrait photography of a fictional person, head-and-shoulders, centered framing, looking at camera, neutral expression",
-    "85mm lens equivalence, f/2.0, shallow depth of field, natural bokeh",
-    "realistic skin texture with pores and subtle imperfections (no plastic skin)",
-    "accurate facial proportions, symmetrical face, detailed eyelashes, sharp iris reflections, natural hair strands",
-    "soft three-point lighting with gentle rim light, natural colors, filmic tone mapping",
-    "avoid disfigurement, deformation, asymmetry, extra fingers or limbs, warped eyes, blurry or distorted facial features, over-smoothing"
-  ].join("; ");
-  return `${text}. ${preset}`;
-}
-
-
 document.addEventListener('DOMContentLoaded', () => {
   // Referenzen auf Modal und dessen Eingabefelder für den API‑Schlüssel
   const modal = document.getElementById('apiKeyModal');
