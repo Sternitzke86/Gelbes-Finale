@@ -102,37 +102,20 @@ document.addEventListener('DOMContentLoaded', () => {
       // Erstelle einen temporären Download-Link
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      
-      // Edge-spezifische Eigenschaften
       link.href = downloadUrl;
       link.download = filename;
       link.style.display = 'none';
-      link.target = '_blank';
-      
-      // Trigger Download mit zusätzlichen Edge-Workarounds
+      // Füge den Link zum DOM hinzu
       document.body.appendChild(link);
-      
-      // Verschiedene Trigger-Methoden für Edge
-      try {
-        link.click();
-      } catch (e) {
-        // Fallback für Edge: simuliere Mouse-Event
-        const event = new MouseEvent('click', {
-          bubbles: true,
-          cancelable: true,
-          view: window
-        });
-        link.dispatchEvent(event);
-      }
-      
-      // Cleanup mit Verzögerung für Edge
+      // Löst den Download aus
+      link.click();
+      // Entferne den Link und gib die URL frei
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
       }, 100);
-      
+
       console.log(`✅ Bild automatisch heruntergeladen: ${filename}`);
-      
       // Zusätzliche Bestätigung für den Benutzer
       showDownloadConfirmation(filename);
       
