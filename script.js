@@ -185,17 +185,17 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
       return;
     }
 
-    // Erstelle eine neue Nachricht im Chatverlauf ohne Statusmeldungen
+    // Erstelle eine neue Nachricht im Chatverlauf
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
     const promptPara = document.createElement('p');
     promptPara.className = 'prompt-text';
     promptPara.textContent = originalPrompt;
     messageDiv.appendChild(promptPara);
-
+    
+    // Füge die Nachricht in die Liste ein (ohne Statusanzeige)
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    // Promptfeld leeren
     promptInput.value = '';
 
     // Bei direktem file:// Zugriff abbrechen
@@ -220,15 +220,7 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
         });
         messageDiv.appendChild(img);
         
-        // Optional: Zeige auch den optimierten Prompt
-        const optimizedDiv = document.createElement('div');
-        optimizedDiv.innerHTML = `<small><strong>Optimierter Prompt:</strong> ${optimizedPrompt}</small>`;
-        optimizedDiv.style.fontSize = '0.8em';
-        optimizedDiv.style.color = '#666';
-        optimizedDiv.style.marginTop = '0.5rem';
-        messageDiv.appendChild(optimizedDiv);
-        
-        // Bild automatisch in der Overlay‑Ansicht anzeigen
+        // Zeige das generierte Bild sofort groß
         showResult(img.cloneNode(true));
       } else {
         const errorP = document.createElement('p');
@@ -237,8 +229,6 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
       }
     } catch (error) {
       console.error('Generation error:', error);
-      
-      // Es gibt keinen Loading‑Indikator mehr zu entfernen
       
       const errorP = document.createElement('p');
       if (error.message && error.message.toLowerCase().includes('failed to fetch')) {
