@@ -380,6 +380,7 @@ footer {
   margin-bottom: 1rem;
 }
 .logo-bar .logo {
-  height: 60px; /* gleiche Höhe für beide Logos */
+  /* Erhöhe die Höhe der Logos um ein Drittel gegenüber der ursprünglichen Größe */
+  height: 80px;
   width: auto;
 }
