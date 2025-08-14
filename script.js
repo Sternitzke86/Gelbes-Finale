@@ -4,10 +4,7 @@
   1. GPT-4 optimiert den Prompt (wie ChatGPT intern)
   2. Optimierter Prompt wird an DALL-E 3 gesendet
   
-  NEUE FEATURES:
-  - Automatischer Download der generierten Bilder
-  - Verbesserte Gesichtsdarstellung durch optimierte Prompts
-  - Bessere Fehlerbehandlung
+  Das garantiert identische Ergebnisse zur ChatGPT-Webseite!
 */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -52,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function warnIfFileProtocol() {
     if (window.location.protocol === 'file:') {
       showResult(
-        'Diese Anwendung funktioniert nicht, wenn sie direkt über eine lokale Datei (file://) geöffnet wird. Bitte starte einen lokalen Webserver (z. B. mit "python -m http.server" im Projektordner) und öffne die Seite über http://localhost:PORT.'
+        'Diese Anwendung funktioniert nicht, wenn sie direkt über eine lokale Datei (file://) geöffnet wird. Bitte starte einen lokalen Webserver (z.\u00a0B. mit "python -m http.server" im Projektordner) und öffne die Seite über http://localhost:PORT.'
       );
       return true;
     }
@@ -75,100 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
     resultModal.style.display = 'none';
   }
 
-  // NEUE FUNKTION: Automatischer Download von Bildern (Edge-optimiert)
-  async function downloadImage(imageUrl, filename) {
-    try {
-      console.log('🔄 Starte Download...', filename);
-      
-      // Edge-spezifische Behandlung
-      if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-        // Für ältere Edge-Versionen (Legacy Edge)
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        window.navigator.msSaveOrOpenBlob(blob, filename);
-        console.log(`✅ Bild automatisch heruntergeladen (Legacy Edge): ${filename}`);
-        return;
-      }
-      
-      // Standard-Download für moderne Browser (Chromium Edge)
-      const response = await fetch(imageUrl);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const blob = await response.blob();
-      
-      // Erstelle einen temporären Download-Link
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = filename;
-      link.style.display = 'none';
-      // Füge den Link zum DOM hinzu
-      document.body.appendChild(link);
-      // Löst den Download aus
-      link.click();
-      // Entferne den Link und gib die URL frei
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(downloadUrl);
-      }, 100);
-
-      console.log(`✅ Bild automatisch heruntergeladen: ${filename}`);
-      // Zusätzliche Bestätigung für den Benutzer
-      showDownloadConfirmation(filename);
-      
-    } catch (error) {
-      console.error('❌ Download-Fehler:', error);
-      
-      // Fallback: Öffne Bild in neuem Tab wenn Download fehlschlägt
-      try {
-        window.open(imageUrl, '_blank');
-        console.log('💡 Download fehlgeschlagen - Bild in neuem Tab geöffnet');
-      } catch (openError) {
-        console.error('❌ Auch das Öffnen in neuem Tab fehlgeschlagen:', openError);
-      }
-    }
-  }
-
-  // Neue Hilfsfunktion: Zeige Download-Bestätigung
-  function showDownloadConfirmation(filename) {
-    // Erstelle eine temporäre Benachrichtigung
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #4CAF50;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 9999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: opacity 0.3s ease;
-    `;
-    notification.textContent = `✅ Download: ${filename}`;
-    
-    document.body.appendChild(notification);
-    
-    // Entferne die Benachrichtigung nach 3 Sekunden
-    setTimeout(() => {
-      notification.style.opacity = '0';
-      setTimeout(() => {
-        if (document.body.contains(notification)) {
-          document.body.removeChild(notification);
-        }
-      }, 300);
-    }, 3000);
-  }
-
-  // VERBESSERTE FUNKTION: GPT-4 optimiert den Prompt mit besserem Fokus auf Gesichter
+  // STUFE 1: GPT-4 optimiert den Prompt (wie ChatGPT intern)
   async function optimizePromptWithGPT4(userPrompt) {
     const systemPrompt = `You are ChatGPT's internal DALL-E 3 prompt optimizer. Your job is to transform user prompts into detailed, high-quality DALL-E 3 prompts exactly like ChatGPT does.
 
-IMPORTANT RULES FOR BETTER RESULTS:
+IMPORTANT RULES:
 1. Add professional photography details: lighting, composition, camera settings, style
 2. Include specific visual details: textures, colors, atmosphere, mood
 3. Specify image quality: "photorealistic", "high resolution", "professional quality"  
@@ -178,12 +86,6 @@ IMPORTANT RULES FOR BETTER RESULTS:
 7. Write in English even if user writes in German
 8. DO NOT use quotation marks in your response
 9. Focus on visual elements that DALL-E 3 understands well
-
-SPECIAL RULES FOR HUMAN FACES AND PORTRAITS:
-- If the prompt involves people or faces, add: "beautiful detailed facial features, expressive eyes, natural skin texture, professional portrait lighting, sharp focus on face"
-- For portraits: "studio lighting, soft shadows, detailed facial structure, natural expressions, high-resolution portrait photography"
-- Avoid generic terms like "person" - use more specific descriptors
-- Add lighting that flatters human features: "soft diffused lighting, golden hour light, or professional studio setup"
 
 Transform this user prompt into an optimized DALL-E 3 prompt:`;
 
@@ -219,12 +121,8 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
       return optimizedPrompt;
     } catch (error) {
       console.error('GPT-4 optimization error:', error);
-      // Fallback mit verbesserter Gesichtsdarstellung
-      const hasHumanReference = /person|mensch|gesicht|portrait|face|people|woman|man|frau|mann|kind|child/i.test(userPrompt);
-      const faceEnhancement = hasHumanReference ? 
-        ", beautiful detailed facial features, expressive eyes, natural skin texture, professional portrait lighting, soft diffused lighting" : "";
-      
-      return `Create a stunning, highly detailed, photorealistic image with professional lighting, sharp focus, vibrant colors, cinematic composition, award-winning photography quality${faceEnhancement}. Subject: ${userPrompt}`;
+      // Fallback to basic enhancement if GPT-4 fails
+      return `Create a stunning, highly detailed, photorealistic image with professional lighting, sharp focus, vibrant colors, cinematic composition, award-winning photography quality. Subject: ${userPrompt}`;
     }
   }
 
@@ -278,7 +176,7 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
     }
   }
 
-  // HAUPTFUNKTION: Kombiniert beide Stufen wie ChatGPT + Auto-Download
+  // HAUPTFUNKTION: Kombiniert beide Stufen wie ChatGPT
   async function sendPrompt() {
     const originalPrompt = promptInput.value.trim();
     if (!originalPrompt) return;
@@ -295,7 +193,13 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
     promptPara.textContent = originalPrompt;
     messageDiv.appendChild(promptPara);
     
-    // Füge die Nachricht in die Liste ein (ohne Statusanzeige)
+    // Loading-Indikator hinzufügen
+    const loadingDiv = document.createElement('div');
+    loadingDiv.textContent = '🔄 Optimiere Prompt mit GPT-4...';
+    loadingDiv.style.fontStyle = 'italic';
+    loadingDiv.style.color = '#666';
+    messageDiv.appendChild(loadingDiv);
+    
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     promptInput.value = '';
@@ -305,10 +209,15 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
 
     try {
       // STUFE 1: GPT-4 optimiert den Prompt (wie ChatGPT)
+      loadingDiv.textContent = '🔄 GPT-4 optimiert Prompt...';
       const optimizedPrompt = await optimizePromptWithGPT4(originalPrompt);
       
       // STUFE 2: DALL-E 3 generiert das Bild
+      loadingDiv.textContent = '🎨 DALL-E 3 generiert Bild...';
       const imageData = await generateImageWithOptimizedPrompt(optimizedPrompt, originalPrompt);
+      
+      // Loading-Indikator entfernen
+      messageDiv.removeChild(loadingDiv);
       
       const imageUrl = imageData.data && imageData.data[0] && imageData.data[0].url;
       
@@ -322,14 +231,16 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
         });
         messageDiv.appendChild(img);
         
-        // Zeige das generierte Bild sofort groß
+        // Zeige auch den optimierten Prompt (optional)
+        const optimizedDiv = document.createElement('div');
+        optimizedDiv.innerHTML = `<small><strong>Optimierter Prompt:</strong> ${optimizedPrompt}</small>`;
+        optimizedDiv.style.fontSize = '0.8em';
+        optimizedDiv.style.color = '#666';
+        optimizedDiv.style.marginTop = '0.5rem';
+        messageDiv.appendChild(optimizedDiv);
+        
+        // automatisch groß anzeigen
         showResult(img.cloneNode(true));
-        
-        // NEUE FUNKTION: Automatischer Download
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        const filename = `prompt-battle-${timestamp}.png`;
-        downloadImage(imageUrl, filename);
-        
       } else {
         const errorP = document.createElement('p');
         errorP.textContent = 'Es wurde kein Bild zurückgegeben.';
@@ -337,6 +248,11 @@ Transform this user prompt into an optimized DALL-E 3 prompt:`;
       }
     } catch (error) {
       console.error('Generation error:', error);
+      
+      // Loading-Indikator entfernen
+      if (messageDiv.contains(loadingDiv)) {
+        messageDiv.removeChild(loadingDiv);
+      }
       
       const errorP = document.createElement('p');
       if (error.message && error.message.toLowerCase().includes('failed to fetch')) {
